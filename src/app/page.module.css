@@ -1,7 +1,7 @@
 .main {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  max-width: 1042px;
+  max-width: 1319px;
   margin: 0 auto;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .tableContainer th {
-  background: rgb(var(--table-header-rgb));
+  background: rgba(var(--table-header-rgba));
   color: rgb(var(--on-table-header-rgb));
   text-align: left;
 }
@@ -76,7 +76,7 @@
 }
 
 .tableContainer tbody tr:not(:last-child) {
-  border-bottom: 1px solid rgb(var(--table-border-bottom-rgb));
+  border-bottom: 1px solid rgba(var(--table-border-bottom-rgba));
 }
 
 .tableContainer th,
@@ -112,9 +112,114 @@
   color: rgb(var(--foreground-rgb));
 }
 
+.desktopView {
+  display: none;
+}
+
+.cards {
+  display: flex;
+  gap: 3rem;
+  overflow-x: auto;
+  padding: 34px 0 52px 0;
+}
+
+.card[data-card-bg1] {
+  background: rgba(255, 219, 206, 0.14);
+  --border-color: rgb(239, 103, 42);
+}
+
+.card[data-card-bg2] {
+  background: rgba(255, 239, 156, 0.05);
+  --border-color: rgb(228, 207, 18);
+}
+
+.card[data-card-bg3] {
+  background: rgb(226, 238, 249, 0.38);
+  --border-color: rgb(25, 74, 201);
+}
+
+.card[data-card-bg4] {
+  background: rgb(var(--background-rgb));
+  --border-color: transparent;
+}
+
+.card {
+  min-width: 288px;
+  height: 144px;
+  padding: 20px 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  display: inline-block;
+  box-shadow: var(--card-shadow);
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.cardContent > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.barcodeCard {
+  min-width: 310px;
+  padding: 18px 22px;
+}
+
+.barcodeCardContent {
+  display: flex;
+  gap: 2.94rem;
+  align-items: center;
+  min-width: 266px;
+}
+
+.barcodeCardContent > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 142px;
+}
+
+.barcodeCardContent > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.titleBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBar div {
+  width: 324px;
+}
+
 @media (prefers-color-scheme: dark) {
   .barcode {
     filter: invert(1);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobileView {
+    display: none;
+  }
+
+  .desktopView {
+    display: block;
+  }
+
+  .tableContainer {
+    max-height: max(calc(100vh - 440px), 200px);
+    margin-top: 42px;
   }
 }
 

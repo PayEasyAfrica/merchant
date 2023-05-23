@@ -6,15 +6,16 @@
   --on-primary-rgb: 255, 255, 255;
 
   --background-shadow: 4px 4px 50px 1px rgba(var(--foreground-rgb), 0.1);
+  --card-shadow: 10px 10px 100px -20px rgba(var(--foreground-rgb), 0.08);
 
   --radius: 2px;
 
   --input-border: 1px solid #e4d7d5;
 
-  --table-header-rgb: 255, 249, 248;
+  --table-header-rgba: 255, 249, 248, 1;
   --on-table-header-rgb: 0, 0, 0;
 
-  --table-border-bottom-rgb: 251, 238, 234;
+  --table-border-bottom-rgba: 251, 238, 234, 1;
 
   --success-rgb: 4, 212, 0;
   --on-success-rgb: 255, 255, 255;
@@ -27,8 +28,14 @@
 
     --primary-rgb: 177, 60, 7;
     --background-shadow: none;
+    --card-shadow: none;
 
     --input-border: 1px solid rgba(208, 188, 255, 0.1);
+
+    --table-header-rgba: 16, 15, 20, 1;
+    --on-table-header-rgb: 255, 255, 255;
+
+    --table-border-bottom-rgba: 16, 15, 20, 1;
   }
 }
 

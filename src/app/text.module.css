@@ -26,9 +26,41 @@
   letter-spacing: 0.1px;
 }
 
+.titleSmall {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+}
+
+.titleMedium {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+}
+
+.headlineSmall {
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+}
+
 .payeasyTitle {
   font-style: normal;
   font-weight: 700;
   font-size: 48px;
   line-height: 46px;
+}
+
+.payeasyTitleMedium {
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 40px;
+}
+
+.payeasyBody {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 32px;
 }
