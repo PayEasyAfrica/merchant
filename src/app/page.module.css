@@ -1,132 +1,125 @@
 .main {
-  display: flex;
-  min-height: 100vh;
-}
-.main > * {
-  flex-grow: 1;
-}
-
-.main > *:first-child {
-  background-image: url("/landing.png");
-  background-position: center;
-  background-size: contain;
-  max-width: 628px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  max-width: 1042px;
+  margin: 0 auto;
 }
 
-.leftContent {
-  background: rgba(var(--primary-rgb), 0.82);
-  color: rgb(var(--on-primary-rgb));
-  min-height: 100%;
-  padding-top: 38px;
-  padding-bottom: 38px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+.logoutButton {
+  color: rgb(var(--primary-rgb));
 }
 
-.leftContent > div {
-  max-width: 427px;
-  display: grid;
-  gap: 149px;
-}
-
-.textContent {
-  display: grid;
-  gap: 24px;
-}
-
-.title {
-  font-style: normal;
-  font-weight: 700;
-  font-size: 48px;
-  line-height: 46px;
-}
-
-.body {
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 20px;
-  letter-spacing: 0.1px;
-}
-
-.main > *:last-child {
+.header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding-top: 0.875rem;
 }
 
-.form {
-  width: 100%;
-  max-width: 469px;
-  height: 100%;
-  max-height: 393px;
-  background: rgb(var(--background-rgb));
-  box-shadow: var(--background-shadow);
-  border-radius: var(--radius);
-}
-
-.form {
+.mobileView {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  align-items: stretch;
   justify-content: center;
-  padding: 0 42px;
-}
-
-.form > div {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 24px;
+  position: relative;
 }
 
-.payeasyInput {
-  display: grid;
-  gap: 12px;
+.mobileView .barcode {
+  max-height: 300px;
 }
 
-.payeasyInput input {
-  border-radius: 2px;
-  padding: 14px 12px;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0.5px;
-  border: var(--input-border);
-  outline: none;
-  display: block;
+.searchInputContainer {
+  position: relative;
+  width: 100%;
 }
 
-.payeasyButton {
-  background: rgb(var(--primary-rgb));
-  color: rgb(var(--on-primary-rgb));
-  display: inline-block;
-  cursor: pointer;
-  border-radius: var(--radius);
-  padding: 14px;
-  border: none;
+.searchInput {
+  width: 100%;
 }
 
-/* Tablet and Smaller Desktop */
-@media (min-width: 701px) and (max-width: 1120px) {
-  .main > *:first-child {
-    display: none;
+.searchButton {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 18px 24px !important;
+  line-height: 0 !important;
+}
+
+.tableContainer {
+  width: 100%;
+  max-height: max(calc(100vh - 505px), 200px);
+  overflow-y: scroll;
+}
+
+.tableContainer table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableContainer th {
+  background: rgb(var(--table-header-rgb));
+  color: rgb(var(--on-table-header-rgb));
+  text-align: left;
+}
+
+.tableContainer th:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.tableContainer th:last-child {
+  border-radius: 0 var(--radius) var(--radius);
+}
+
+.tableContainer thead {
+  position: sticky;
+  top: 0;
+}
+
+.tableContainer tbody tr:not(:last-child) {
+  border-bottom: 1px solid rgb(var(--table-border-bottom-rgb));
+}
+
+.tableContainer th,
+.tableContainer td {
+  padding: 20px;
+}
+
+.successOverlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--background-rgb));
+  color: rgb(var(--success-rgb));
+  text-align: center;
+  gap: 32px;
+  display: none;
+  opacity: 0;
+  transition: all 200ms ease-in-out;
+}
+.successOverlay.mountOverlay {
+  display: flex;
+}
+.successOverlay.showOverlay {
+  opacity: 1;
+}
+
+.successOverlay p:last-child {
+  color: rgb(var(--foreground-rgb));
+}
+
+@media (prefers-color-scheme: dark) {
+  .barcode {
+    filter: invert(1);
   }
-
-  .main > *:last-child {
-    flex-grow: 1;
-  }
 }
 
-/* Mobile */
-@media (max-width: 700px) {
-  .main > *:first-child {
-    display: none;
-  }
-
-  .form {
-    padding: 0 1.5rem;
+@media (min-width: 1440px) {
+  .main {
+    padding: 0;
   }
 }

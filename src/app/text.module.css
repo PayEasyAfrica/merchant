@@ -1,3 +1,17 @@
+.bodySmall {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+}
+
+.bodyMedium {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+}
+
 .bodyLarge {
   font-weight: 400;
   font-size: 16px;
@@ -5,10 +19,16 @@
   letter-spacing: 0.5px;
 }
 
-.bodyMedium {
-  font-style: normal;
-  font-weight: 400;
+.labelLarge {
+  font-weight: 500;
   font-size: 14px;
   line-height: 20px;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.1px;
+}
+
+.payeasyTitle {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 46px;
 }

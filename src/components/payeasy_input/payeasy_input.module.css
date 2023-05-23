@@ -1,0 +1,17 @@
+.payeasyInput {
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  border: var(--input-border);
+  outline: none;
+  display: block;
+}
+
+.payeasyInputWithLabel {
+  display: grid;
+  gap: 12px;
+}

@@ -1,0 +1,59 @@
+import {
+  DetailedHTMLProps,
+  InputHTMLAttributes,
+  LabelHTMLAttributes,
+} from "react";
+import styles from "./payeasy_input.module.css";
+import textStyles from "../../app/text.module.css";
+import { Util } from "@/util";
+
+type PayEasyInputLabelProps = DetailedHTMLProps<
+  LabelHTMLAttributes<HTMLLabelElement>,
+  HTMLLabelElement
+>;
+
+type PayEasyInputProps = DetailedHTMLProps<
+  InputHTMLAttributes<HTMLInputElement>,
+  HTMLInputElement
+>;
+
+type PayEasyInputWithLabelProps = {
+  label: string;
+  type: string;
+  placeholder: string;
+  id: string;
+};
+
+export const PayEasyInputLabel = (props: PayEasyInputLabelProps) => {
+  return (
+    <label
+      {...props}
+      className={Util.classNames(textStyles.bodyLarge, props.className)}
+    />
+  );
+};
+
+export const PayEasyInput = (props: PayEasyInputProps) => {
+  return (
+    <input
+      {...props}
+      className={Util.classNames(styles.payeasyInput, props.className)}
+    />
+  );
+};
+
+export const PayEasyInputWithLabel = (props: PayEasyInputWithLabelProps) => {
+  return (
+    <div className={styles.payeasyInputWithLabel}>
+      <PayEasyInputLabel htmlFor={props.id} className={textStyles.bodyLarge}>
+        {props.label}
+      </PayEasyInputLabel>
+
+      <PayEasyInput
+        type={props.type}
+        placeholder={props.placeholder}
+        id={props.id}
+      />
+    </div>
+  );
+};

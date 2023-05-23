@@ -7,9 +7,17 @@
 
   --background-shadow: 4px 4px 50px 1px rgba(var(--foreground-rgb), 0.1);
 
-  --radius: 10px;
+  --radius: 2px;
 
   --input-border: 1px solid #e4d7d5;
+
+  --table-header-rgb: 255, 249, 248;
+  --on-table-header-rgb: 0, 0, 0;
+
+  --table-border-bottom-rgb: 251, 238, 234;
+
+  --success-rgb: 4, 212, 0;
+  --on-success-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
