@@ -247,6 +247,36 @@
   min-width: 94px;
 }
 
+.printView,
+.printView img {
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.printView {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  background-color: rgb(254, 114, 53);
+  background-image: url("/business_barcode.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: none;
+}
+
+.printView img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: auto;
+  height: 45vh;
+  transform: translate(-50%, -50%);
+  border-radius: 30px;
+}
+
 @media (prefers-color-scheme: dark) {
   .barcode {
     filter: invert(1);
@@ -271,5 +301,22 @@
 @media (min-width: 1440px) {
   .main {
     padding: 0;
+  }
+}
+
+@media print {
+  .desktopView {
+    display: none;
+  }
+  .mobileView {
+    display: none;
+  }
+  .printView {
+    display: block;
+  }
+  .printView,
+  .printView img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }

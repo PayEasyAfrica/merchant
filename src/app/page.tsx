@@ -283,7 +283,7 @@ export default function Home() {
                     priority
                   />
 
-                  <PayEasyNoFillIconButton>
+                  <PayEasyNoFillIconButton onClick={window.print}>
                     <Image
                       src="/svg_icons/print.svg"
                       alt="Print Icon"
@@ -339,6 +339,16 @@ export default function Home() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className={styles.printView}>
+          <Image
+            src={dummyBarcode}
+            alt="Barcode"
+            width={300}
+            height={300}
+            priority
+          />
         </div>
       </main>
     </NiceModal.Provider>
