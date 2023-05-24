@@ -11,7 +11,12 @@
   display: block;
 }
 
-.payeasyInputWithLabel {
+.payeasyInputWithLabel > div {
   display: grid;
   gap: 12px;
+}
+
+.payeasyInputWithLabel > p {
+  color: rgb(var(--primary-rgb));
+  min-height: 16px;
 }

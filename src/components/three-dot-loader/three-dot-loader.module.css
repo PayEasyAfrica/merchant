@@ -1,0 +1,54 @@
+.threeDotLoader {
+  display: inline-block;
+  position: relative;
+  --loader-color: rgb(var(--foreground-rgb));
+}
+.threeDotLoader div {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--loader-color);
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.threeDotLoader div:nth-child(1) {
+  left: 8px;
+  animation: threeDotLoader1 0.6s infinite;
+}
+.threeDotLoader div:nth-child(2) {
+  left: 8px;
+  animation: threeDotLoader2 0.6s infinite;
+}
+.threeDotLoader div:nth-child(3) {
+  left: 32px;
+  animation: threeDotLoader2 0.6s infinite;
+}
+.threeDotLoader div:nth-child(4) {
+  left: 56px;
+  animation: threeDotLoader3 0.6s infinite;
+}
+@keyframes threeDotLoader1 {
+  0% {
+    transform: scale(0) translate(0, -50%);
+  }
+  100% {
+    transform: scale(1) translate(0, -50%);
+  }
+}
+@keyframes threeDotLoader3 {
+  0% {
+    transform: scale(1) translate(0, -50%);
+  }
+  100% {
+    transform: scale(0) translate(0, -50%);
+  }
+}
+@keyframes threeDotLoader2 {
+  0% {
+    transform: translate(0, -50%);
+  }
+  100% {
+    transform: translate(24px, -50%);
+  }
+}

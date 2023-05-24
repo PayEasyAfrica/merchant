@@ -12,6 +12,13 @@ import { PayEasyInput } from "@/components/payeasy_input/payeasy_input";
 import { SuccessOverlay } from "./success-overlay";
 import { Modal } from "@/components/modal/modal";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type AuthData = {
+  token: string;
+  terminalId: string;
+};
 
 const SearchForm = () => {
   return (
@@ -134,6 +141,32 @@ const TransactionNotFoundModal = NiceModal.create(() => {
 });
 
 export default function Home() {
+  const router = useRouter();
+  const [authData, setAuthData] = useState<AuthData | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.authData) {
+      router.replace("/login");
+      return;
+    }
+    let data: AuthData;
+    try {
+      data = JSON.parse(localStorage.authData);
+      if (!data?.terminalId || !data?.token) {
+        localStorage.clear();
+        router.replace("/login");
+        return;
+      }
+
+      setAuthData(data);
+    } catch (error) {
+      localStorage.clear();
+      router.replace("/login");
+    }
+  }, [router]);
+
+  console.log(authData);
+
   return (
     <NiceModal.Provider>
       <main className={styles.main}>

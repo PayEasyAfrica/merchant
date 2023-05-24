@@ -19,10 +19,8 @@ type PayEasyInputProps = DetailedHTMLProps<
 
 type PayEasyInputWithLabelProps = {
   label: string;
-  type: string;
-  placeholder: string;
-  id: string;
-};
+  error?: string;
+} & DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
 
 export const PayEasyInputLabel = (props: PayEasyInputLabelProps) => {
   return (
@@ -43,17 +41,17 @@ export const PayEasyInput = (props: PayEasyInputProps) => {
 };
 
 export const PayEasyInputWithLabel = (props: PayEasyInputWithLabelProps) => {
+  const { label, error, ...inputProps } = props;
   return (
     <div className={styles.payeasyInputWithLabel}>
-      <PayEasyInputLabel htmlFor={props.id} className={textStyles.bodyLarge}>
-        {props.label}
-      </PayEasyInputLabel>
+      <div>
+        <PayEasyInputLabel htmlFor={props.id} className={textStyles.bodyLarge}>
+          {label}
+        </PayEasyInputLabel>
 
-      <PayEasyInput
-        type={props.type}
-        placeholder={props.placeholder}
-        id={props.id}
-      />
+        <PayEasyInput {...inputProps} />
+      </div>
+      <p className={textStyles.bodySmall}>{error}</p>
     </div>
   );
 };

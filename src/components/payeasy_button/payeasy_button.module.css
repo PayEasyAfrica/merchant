@@ -1,7 +1,9 @@
 .payeasyNoFillIconButton,
 .payeasyButton,
 .payeasyOutlineButton {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   border-radius: var(--radius);
   padding: 14px;
@@ -13,6 +15,12 @@
   color: rgb(var(--on-primary-rgb));
 }
 
+.payeasyButton .loader {
+  --loader-color: rgb(var(--on-primary-rgb)) !important;
+  height: 20px;
+  width: 68px;
+}
+
 .payeasyOutlineButton {
   background: transparent;
   color: rgb(var(--primary-rgb));
@@ -21,8 +29,5 @@
 
 .payeasyNoFillIconButton {
   background: transparent;
-  display: inline-flex;
   gap: 8px;
-  align-items: center;
-  justify-content: center;
 }
