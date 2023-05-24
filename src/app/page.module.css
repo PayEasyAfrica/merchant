@@ -188,8 +188,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  justify-content: space-between;
+  height: 108px;
 }
 
 .titleBar {
@@ -248,7 +248,8 @@
 }
 
 .printView,
-.printView img {
+.printView img,
+.printView div {
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
@@ -267,13 +268,22 @@
   display: none;
 }
 
-.printView img {
+.printView div {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: auto;
-  height: 45vh;
   transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  padding: 3vh;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.printView img {
+  width: auto;
+  height: 42vh;
   border-radius: 30px;
 }
 

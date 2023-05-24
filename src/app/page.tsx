@@ -7,18 +7,30 @@ import {
   PayEasyNoFillIconButton,
   PayEasyOutlineButton,
 } from "@/components/payeasy_button/payeasy_button";
-import { dummyBarcode } from "@/barcode";
 import { PayEasyInput } from "@/components/payeasy_input/payeasy_input";
 import { SuccessOverlay } from "./success-overlay";
 import { Modal } from "@/components/modal/modal";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Util } from "@/util";
+import { AxiosError } from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { ThreeDotLoader } from "@/components/three-dot-loader/three-dot-loader";
 
 type AuthData = {
   token: string;
   terminalId: string;
-};
+} | null;
+
+type Statistics = {
+  totalTransactionAmount: number;
+  totalTransactions: number;
+  terminalId: string;
+} | null;
 
 const SearchForm = () => {
   return (
@@ -51,7 +63,7 @@ const SearchForm = () => {
   );
 };
 
-const LogoutModal = NiceModal.create(() => {
+const LogoutModal = NiceModal.create((props: { logout(): unknown }) => {
   const modal = useModal();
 
   return (
@@ -67,9 +79,17 @@ const LogoutModal = NiceModal.create(() => {
         </p>
 
         <div>
-          <PayEasyButton className={styles.confirmButton}>Yes</PayEasyButton>
+          <PayEasyButton
+            onClick={props.logout}
+            className={styles.confirmButton}
+          >
+            Yes
+          </PayEasyButton>
 
-          <PayEasyOutlineButton className={styles.confirmButton}>
+          <PayEasyOutlineButton
+            onClick={modal.hide}
+            className={styles.confirmButton}
+          >
             No
           </PayEasyOutlineButton>
         </div>
@@ -140,32 +160,109 @@ const TransactionNotFoundModal = NiceModal.create(() => {
   );
 });
 
+const useStatistics = (authData: AuthData) => {
+  const [statistics, setStatistics] = useState<Statistics>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authData) {
+      setLoading(true);
+      Util.http
+        .get("/merchants/payments/statistics")
+        .then((res) => {
+          const data = res.data.data as Statistics;
+
+          setStatistics(data);
+        })
+        .catch((error) => {
+          Util.handleHttpError(error, ({ message }) => {
+            toast.error(message);
+          });
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [authData]);
+
+  return { loadingStatistics: loading || !statistics, statistics };
+};
+
+const useBarCode = (authData: AuthData) => {
+  const [barcode, setBarcode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (authData) {
+      setLoading(true);
+      Util.http
+        .get("/payments/barcodes")
+        .then((res) => {
+          const code = res.data.data as string;
+
+          setBarcode(code);
+        })
+        .catch((error) => {
+          Util.handleHttpError(error, ({ message }) => {
+            toast.error(message);
+          });
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [authData]);
+
+  return { loadingBarcode: loading || !barcode, barcode };
+};
+
 export default function Home() {
   const router = useRouter();
-  const [authData, setAuthData] = useState<AuthData | null>(null);
+  const [authData, setAuthData] = useState<AuthData>(null);
+  const { statistics, loadingStatistics } = useStatistics(authData);
+  const { barcode, loadingBarcode } = useBarCode(authData);
+
+  const logout = useCallback(() => {
+    localStorage.clear();
+    router.replace("/login");
+  }, [router]);
 
   useEffect(() => {
     if (!localStorage.authData) {
-      router.replace("/login");
+      logout();
       return;
     }
     let data: AuthData;
     try {
       data = JSON.parse(localStorage.authData);
       if (!data?.terminalId || !data?.token) {
-        localStorage.clear();
-        router.replace("/login");
+        logout();
         return;
       }
 
       setAuthData(data);
-    } catch (error) {
-      localStorage.clear();
-      router.replace("/login");
-    }
-  }, [router]);
 
-  console.log(authData);
+      const tokenInterceptor = Util.http.interceptors.request.use((config) => {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${data?.token}`;
+
+        return config;
+      });
+      const authInterceptor = Util.http.interceptors.response.use(
+        (res) => res,
+        (error: AxiosError) => {
+          if (error.response?.status === 401) {
+            logout();
+          }
+
+          return Promise.reject(error);
+        }
+      );
+
+      return () => {
+        Util.http.interceptors.request.eject(tokenInterceptor);
+        Util.http.interceptors.response.eject(authInterceptor);
+      };
+    } catch (error) {
+      logout();
+    }
+  }, [logout]);
 
   return (
     <NiceModal.Provider>
@@ -180,7 +277,7 @@ export default function Home() {
           />
 
           <PayEasyNoFillIconButton
-            onClick={() => NiceModal.show(LogoutModal)}
+            onClick={() => NiceModal.show(LogoutModal, { logout })}
             className={styles.logoutButton}
           >
             <Image
@@ -197,7 +294,7 @@ export default function Home() {
         <div className={styles.mobileView}>
           <div className={styles.barcode}>
             <Image
-              src={dummyBarcode}
+              src={barcode}
               alt="Terminal Barcode"
               width={300}
               height={300}
@@ -255,7 +352,16 @@ export default function Home() {
                   />
                 </div>
 
-                <p className={textStyles.payeasyTitleMedium}>₦ 20,000.00</p>
+                {loadingStatistics ? (
+                  <Skeleton width={166} height={30} />
+                ) : (
+                  <p className={textStyles.payeasyTitleMedium}>
+                    ₦{" "}
+                    {(+(statistics?.totalTransactionAmount || 0).toFixed(
+                      2
+                    )).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
             <div className={styles.card} data-card-bg2>
@@ -272,7 +378,15 @@ export default function Home() {
                   />
                 </div>
 
-                <p className={textStyles.payeasyTitleMedium}>100</p>
+                {loadingStatistics ? (
+                  <Skeleton width={166} height={30} />
+                ) : (
+                  <p className={textStyles.payeasyTitleMedium}>
+                    {(+(statistics?.totalTransactions || 0).toFixed(
+                      2
+                    )).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
             <div className={styles.card} data-card-bg3>
@@ -289,7 +403,13 @@ export default function Home() {
                   />
                 </div>
 
-                <p className={textStyles.payeasyTitleMedium}>123456</p>
+                {loadingStatistics ? (
+                  <Skeleton width={166} height={30} />
+                ) : (
+                  <p className={textStyles.payeasyTitleMedium}>
+                    {statistics?.terminalId}
+                  </p>
+                )}
               </div>
             </div>
             <div
@@ -307,16 +427,33 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <Image
-                    src={dummyBarcode}
-                    alt="Terminal Barcode"
-                    width={77}
-                    height={73}
-                    className={styles.barcode}
-                    priority
-                  />
+                  {loadingBarcode ? (
+                    <div
+                      style={{
+                        height: "73px",
+                        width: "77px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ThreeDotLoader />
+                    </div>
+                  ) : (
+                    <Image
+                      src={barcode}
+                      alt="Terminal Barcode"
+                      width={77}
+                      height={73}
+                      className={styles.barcode}
+                      priority
+                    />
+                  )}
 
-                  <PayEasyNoFillIconButton onClick={window.print}>
+                  <PayEasyNoFillIconButton
+                    disabled={loadingBarcode}
+                    onClick={window.print}
+                  >
                     <Image
                       src="/svg_icons/print.svg"
                       alt="Print Icon"
@@ -375,15 +512,22 @@ export default function Home() {
         </div>
 
         <div className={styles.printView}>
-          <Image
-            src={dummyBarcode}
-            alt="Barcode"
-            width={300}
-            height={300}
-            priority
-          />
+          <div>
+            <Image
+              src={barcode}
+              alt="Barcode"
+              width={250}
+              height={250}
+              priority
+            />
+          </div>
         </div>
       </main>
+      <ToastContainer
+        hideProgressBar
+        autoClose={3000}
+        position="bottom-center"
+      />
     </NiceModal.Provider>
   );
 }
