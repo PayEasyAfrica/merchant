@@ -33,3 +33,16 @@ export const PayEasyNoFillIconButton = (props: PayEasyButtonProps) => {
     />
   );
 };
+
+export const PayEasyOutlineButton = (props: PayEasyButtonProps) => {
+  return (
+    <button
+      {...props}
+      className={Util.classNames(
+        styles.payeasyOutlineButton,
+        textStyles.bodyMedium,
+        props.className
+      )}
+    />
+  );
+};

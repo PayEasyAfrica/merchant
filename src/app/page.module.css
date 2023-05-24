@@ -147,7 +147,7 @@
   min-width: 288px;
   height: 144px;
   padding: 20px 22px;
-  border-radius: 6px;
+  border-radius: var(--radius2);
   border: 1px solid var(--border-color);
   display: inline-block;
   box-shadow: var(--card-shadow);
@@ -200,6 +200,51 @@
 
 .titleBar div {
   width: 324px;
+}
+
+.tnxDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.tnxDetails p {
+  text-align: center;
+}
+
+.tnxDetails > div {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tnxDetails > div div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tnxDetails > div div span:first-child {
+  color: rgb(var(--neutral-50-rgb));
+}
+
+.logoutConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.logoutConfirm p {
+  text-align: center;
+}
+
+.logoutConfirm > div {
+  display: flex;
+  justify-content: center;
+  gap: 38px;
+}
+
+.confirmButton {
+  min-width: 94px;
 }
 
 @media (prefers-color-scheme: dark) {

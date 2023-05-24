@@ -9,6 +9,7 @@
   --card-shadow: 10px 10px 100px -20px rgba(var(--foreground-rgb), 0.08);
 
   --radius: 2px;
+  --radius2: 6px;
 
   --input-border: 1px solid #e4d7d5;
 
@@ -19,6 +20,8 @@
 
   --success-rgb: 4, 212, 0;
   --on-success-rgb: 255, 255, 255;
+
+  --neutral-50-rgb: 127, 117, 114;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +39,8 @@
     --on-table-header-rgb: 255, 255, 255;
 
     --table-border-bottom-rgba: 16, 15, 20, 1;
+
+    --neutral-50-rgb: 160, 141, 134;
   }
 }
 
