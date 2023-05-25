@@ -1,0 +1,60 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "payeasy-merchant",
+      "image": "590515733458.dkr.ecr.us-east-1.amazonaws.com/sparkpay-be:payeasy-merchant-6-prod",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "name": "payeasy-merchant-80-tcp",
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": []
+    }
+  ],
+  "family": "payeasy-merchant",
+  "taskRoleArn": "arn:aws:iam::590515733458:role/ECSTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::590515733458:role/ECSTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 2,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.task-iam-role"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": ["EC2", "FARGATE"],
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "1024",
+  "memory": "3072",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "registeredAt": "2023-05-25T17:52:35.894Z",
+  "registeredBy": "arn:aws:iam::590515733458:root",
+  "tags": []
+}
