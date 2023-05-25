@@ -52,6 +52,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: payeasy-merchant-service
-          cluster: payeasy-merchant-cluster
+          service: payeasy-merchant
+          cluster: payeasy-merchant
           wait-for-service-stability: true
