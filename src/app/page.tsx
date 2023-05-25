@@ -11,7 +11,13 @@ import { PayEasyInput } from "@/components/payeasy_input/payeasy_input";
 import { SuccessOverlay } from "./success-overlay";
 import { Modal } from "@/components/modal/modal";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  UIEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Util } from "@/util";
 import { AxiosError } from "axios";
@@ -20,6 +26,9 @@ import "react-toastify/dist/ReactToastify.css";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { ThreeDotLoader } from "@/components/three-dot-loader/three-dot-loader";
+import moment from "moment";
+import debounce from "lodash.debounce";
+import { io } from "socket.io-client";
 
 type AuthData = {
   token: string;
@@ -32,23 +41,54 @@ type Statistics = {
   terminalId: string;
 } | null;
 
-const SearchForm = () => {
+type Transaction = {
+  id: string;
+  amount: number;
+  reference: string;
+  status: string;
+  meta: {
+    sender: {
+      name: string;
+      institution: string;
+      id: string;
+    };
+  };
+  createdAt: string;
+};
+
+type PaginationMeta = {
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
+} | null;
+
+const SearchForm = (props: {
+  loading: boolean;
+  onSubmit(ref: string): unknown;
+}) => {
   return (
     <form
-      onSubmit={(ev) => ev.preventDefault()}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        props.onSubmit((ev.target as any)["search"].value);
+      }}
       className={styles.searchInputContainer}
     >
       <PayEasyInput
+        name="search"
         className={styles.searchInput}
         placeholder="Search by reference"
       />
 
       <PayEasyButton
-        onClick={() =>
-          Math.random() > 0.5
-            ? NiceModal.show(TransactionDetailsModal)
-            : NiceModal.show(TransactionNotFoundModal)
-        }
+        disabled={props.loading}
+        loading={props.loading}
         className={styles.searchButton}
       >
         <Image
@@ -98,7 +138,7 @@ const LogoutModal = NiceModal.create((props: { logout(): unknown }) => {
   );
 });
 
-const TransactionDetailsModal = NiceModal.create(() => {
+const TransactionDetailsModal = NiceModal.create((transaction: Transaction) => {
   const modal = useModal();
 
   return (
@@ -109,31 +149,39 @@ const TransactionDetailsModal = NiceModal.create(() => {
       title="Transaction Details"
     >
       <div className={styles.tnxDetails}>
-        <p className={textStyles.headlineSmall}>₦10,000</p>
+        <p className={textStyles.headlineSmall}>
+          ₦{Util.formatNumber(transaction.amount)}
+        </p>
 
         <div>
           <div>
             <span className={textStyles.bodyLarge}>Name</span>
 
-            <span className={textStyles.titleMedium}>Emmanuel Menyaga</span>
+            <span className={textStyles.titleMedium}>
+              {transaction.meta.sender.name}
+            </span>
           </div>
 
           <div>
             <span className={textStyles.bodyLarge}>Date & Time</span>
 
-            <span className={textStyles.titleMedium}>08/02/2023</span>
+            <span className={textStyles.titleMedium}>
+              {moment(transaction.createdAt).format("DD/MM/YYYY")}
+            </span>
           </div>
 
           <div>
             <span className={textStyles.bodyLarge}>Reference</span>
 
-            <span className={textStyles.titleMedium}>some_ref</span>
+            <span className={textStyles.titleMedium}>
+              {transaction.reference}
+            </span>
           </div>
 
           <div>
             <span className={textStyles.bodyLarge}>Status</span>
 
-            <span className={textStyles.titleMedium}>Completed</span>
+            <span className={textStyles.titleMedium}>{transaction.status}</span>
           </div>
         </div>
       </div>
@@ -160,7 +208,7 @@ const TransactionNotFoundModal = NiceModal.create(() => {
   );
 });
 
-const useStatistics = (authData: AuthData) => {
+const useStatistics = (authData: AuthData, params: unknown) => {
   const [statistics, setStatistics] = useState<Statistics>(null);
   const [loading, setLoading] = useState(false);
 
@@ -176,12 +224,12 @@ const useStatistics = (authData: AuthData) => {
         })
         .catch((error) => {
           Util.handleHttpError(error, ({ message }) => {
-            toast.error(message);
+            toast.error(`error getting statistics - ${message}`);
           });
         })
         .finally(() => setLoading(false));
     }
-  }, [authData]);
+  }, [authData, params]);
 
   return { loadingStatistics: loading || !statistics, statistics };
 };
@@ -202,7 +250,7 @@ const useBarCode = (authData: AuthData) => {
         })
         .catch((error) => {
           Util.handleHttpError(error, ({ message }) => {
-            toast.error(message);
+            toast.error(`error generating barcode -${message}`);
           });
         })
         .finally(() => setLoading(false));
@@ -212,16 +260,116 @@ const useBarCode = (authData: AuthData) => {
   return { loadingBarcode: loading || !barcode, barcode };
 };
 
+const useTransactions = (
+  authData: AuthData,
+  params: { limit: number; page: number; search?: string }
+) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState<PaginationMeta>(null);
+
+  useEffect(() => {
+    if (authData) {
+      setLoading(true);
+      Util.http
+        .get("/merchants/payments/transactions", {
+          params: { page: params.page, limit: params.limit },
+        })
+        .then((res) => {
+          const data = res.data.data as typeof transactions;
+          const meta = res.data.meta as typeof pagination;
+
+          setPagination(meta);
+          setTransactions((transactions) => {
+            for (var i = 0; i < data.length; i += 1) {
+              const index = (meta?.pagingCounter ?? 0) + i - 1;
+              if (
+                transactions[index] &&
+                data[index].id !== transactions[index].id
+              ) {
+                transactions.splice(index, 0, data[index]);
+                continue;
+              }
+
+              transactions[index] = data[i];
+            }
+
+            return transactions;
+          });
+        })
+        .catch((error) => {
+          Util.handleHttpError(error, ({ message }) => {
+            toast.error(`error getting transactions - ${message}`);
+          });
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [authData, params]);
+
+  return {
+    loadingTransactions: loading || !pagination,
+    transactions,
+    pagination,
+  };
+};
+
 export default function Home() {
   const router = useRouter();
   const [authData, setAuthData] = useState<AuthData>(null);
-  const { statistics, loadingStatistics } = useStatistics(authData);
+  const [loading, setLoading] = useState(false);
+  const [successOverlay, setSuccessOverlay] = useState({
+    name: "",
+    amount: "",
+  });
   const { barcode, loadingBarcode } = useBarCode(authData);
+  const [params, setParams] = useState({ page: 1, limit: 100, unique: "" });
+  const { statistics, loadingStatistics } = useStatistics(authData, params);
+  const { loadingTransactions, transactions, pagination } = useTransactions(
+    authData,
+    params
+  );
+  const { page, nextPage } = pagination || {};
 
   const logout = useCallback(() => {
     localStorage.clear();
     router.replace("/login");
   }, [router]);
+
+  const getTransaction = useCallback(
+    async (reference: string) => {
+      if (reference && authData) {
+        try {
+          setLoading(true);
+          const { data } = await Util.http.get(`/payments/${reference}`);
+
+          NiceModal.show(TransactionDetailsModal, data.data);
+        } catch (error) {
+          NiceModal.show(TransactionNotFoundModal);
+        } finally {
+          setLoading(false);
+        }
+      }
+    },
+    [authData]
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleScroll: UIEventHandler<HTMLDivElement> = useCallback(
+    debounce((event) => {
+      const divElement = event.target;
+      if (
+        divElement &&
+        divElement.scrollTop + divElement.clientHeight >=
+          divElement.scrollHeight
+      ) {
+        setParams((params) => ({
+          ...params,
+          page: nextPage || page || 1,
+        }));
+      }
+    }, 1000),
+    [nextPage, page]
+  );
 
   useEffect(() => {
     if (!localStorage.authData) {
@@ -235,8 +383,6 @@ export default function Home() {
         logout();
         return;
       }
-
-      setAuthData(data);
 
       const tokenInterceptor = Util.http.interceptors.request.use((config) => {
         config.headers = config.headers || {};
@@ -255,6 +401,8 @@ export default function Home() {
         }
       );
 
+      setAuthData(data);
+
       return () => {
         Util.http.interceptors.request.eject(tokenInterceptor);
         Util.http.interceptors.response.eject(authInterceptor);
@@ -263,6 +411,80 @@ export default function Home() {
       logout();
     }
   }, [logout]);
+
+  useEffect(() => {
+    if (authData) {
+      const timeout = setTimeout(() => {
+        if ("Notification" in window) {
+          Notification.requestPermission().catch(() => {});
+        }
+      }, 1000);
+
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [authData]);
+
+  useEffect(() => {
+    if (authData) {
+      const authToken = `Bearer ${authData?.token}`;
+      const socket = io(Util.env().apiUrl as string, {
+        transports: ["websocket"],
+        query: { authorization: authToken },
+        transportOptions: {
+          websocket: {
+            headers: {
+              authorization: authToken,
+            },
+            extraHeaders: {
+              authorization: authToken,
+            },
+          },
+        },
+      });
+
+      const events = [] as any[];
+
+      socket.on("MerchantTransaction", (data) => {
+        setParams((params) => ({
+          ...params,
+          page: 1,
+          unique: Math.random().toString(),
+        }));
+
+        events.push(data);
+      });
+
+      const interval = setInterval(() => {
+        const event = events.pop();
+        if (event) {
+          const name = event.transaction.meta.sender.name;
+          const amount = Util.formatNumber(event.transaction.amount);
+          setSuccessOverlay({
+            name,
+            amount,
+          });
+
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(`You just received ₦${amount} from ${name}`, {
+              icon: "/favicon.ico",
+            });
+            const song = new Audio("/not.wav");
+            song.play();
+          }
+        }
+      }, 3000);
+
+      return () => {
+        socket.disconnect();
+        clearInterval(interval);
+      };
+    }
+  }, [authData]);
 
   return (
     <NiceModal.Provider>
@@ -290,52 +512,80 @@ export default function Home() {
             Logout
           </PayEasyNoFillIconButton>
         </div>
-
         <div className={styles.mobileView}>
-          <div className={styles.barcode}>
-            <Image
-              src={barcode}
-              alt="Terminal Barcode"
-              width={300}
-              height={300}
-              className={styles.barcode}
-              priority
-            />
+          <div>
+            {loadingBarcode ? (
+              <div
+                style={{
+                  height: "300px",
+                  width: "300px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ThreeDotLoader />
+              </div>
+            ) : (
+              <Image
+                src={barcode}
+                alt="Terminal Barcode"
+                width={300}
+                height={300}
+                className={styles.barcode}
+                priority
+              />
+            )}
           </div>
 
-          <SearchForm />
+          <SearchForm loading={loading} onSubmit={getTransaction} />
 
-          <div className={styles.tableContainer}>
-            <table>
-              <thead>
-                <tr>
-                  <th className={textStyles.labelLarge}>Names</th>
-                  <th className={textStyles.labelLarge}>Amount</th>
-                  <th className={textStyles.labelLarge}>Reference</th>
-                </tr>
-              </thead>
+          <div style={{ width: "100%" }}>
+            <div className={styles.tableContainer} onScroll={handleScroll}>
+              <table>
+                <thead>
+                  <tr>
+                    <th className={textStyles.labelLarge}>Names</th>
+                    <th className={textStyles.labelLarge}>Amount</th>
+                    <th className={textStyles.labelLarge}>Reference</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {Array(100)
-                  .fill(null)
-                  .map((_, i) => {
+                <tbody>
+                  {transactions.map((transaction) => {
                     return (
-                      <tr key={`tr_${i}`}>
+                      <tr key={transaction.id}>
                         <td className={textStyles.bodySmall}>
-                          Menyaga Emmanuel
+                          {transaction.meta.sender.name}
                         </td>
-                        <td className={textStyles.bodySmall}>₦10,000</td>
-                        <td className={textStyles.bodySmall}>wdfdghtew</td>
+                        <td className={textStyles.bodySmall}>
+                          ₦{Util.formatNumber(transaction.amount)}
+                        </td>
+                        <td className={textStyles.bodySmall}>
+                          {transaction.reference}
+                        </td>
                       </tr>
                     );
                   })}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
+            {loadingTransactions && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "20px 0px 0px",
+                }}
+              >
+                <ThreeDotLoader />
+              </div>
+            )}
           </div>
 
-          <SuccessOverlay name="" amount="" />
+          <SuccessOverlay {...successOverlay} />
         </div>
-
         <div className={styles.desktopView}>
           <div className={styles.cards}>
             <div className={styles.card} data-card-bg1>
@@ -356,10 +606,7 @@ export default function Home() {
                   <Skeleton width={166} height={30} />
                 ) : (
                   <p className={textStyles.payeasyTitleMedium}>
-                    ₦{" "}
-                    {(+(statistics?.totalTransactionAmount || 0).toFixed(
-                      2
-                    )).toLocaleString()}
+                    ₦ {Util.formatNumber(statistics?.totalTransactionAmount)}
                   </p>
                 )}
               </div>
@@ -382,9 +629,7 @@ export default function Home() {
                   <Skeleton width={166} height={30} />
                 ) : (
                   <p className={textStyles.payeasyTitleMedium}>
-                    {(+(statistics?.totalTransactions || 0).toFixed(
-                      2
-                    )).toLocaleString()}
+                    {Util.formatNumber(statistics?.totalTransactions)}
                   </p>
                 )}
               </div>
@@ -452,7 +697,7 @@ export default function Home() {
 
                   <PayEasyNoFillIconButton
                     disabled={loadingBarcode}
-                    onClick={window.print}
+                    onClick={() => window.print()}
                   >
                     <Image
                       src="/svg_icons/print.svg"
@@ -472,45 +717,64 @@ export default function Home() {
             <p className={textStyles.headlineSmall}>Transactions</p>
 
             <div>
-              <SearchForm />
+              <SearchForm loading={loading} onSubmit={getTransaction} />
             </div>
           </div>
 
-          <div className={styles.tableContainer}>
-            <table>
-              <thead>
-                <tr>
-                  <th className={textStyles.labelLarge}>Names</th>
-                  <th className={textStyles.labelLarge}>Date</th>
-                  <th className={textStyles.labelLarge}>Amount</th>
-                  <th className={textStyles.labelLarge}>Reference</th>
-                  <th className={textStyles.labelLarge}>Status</th>
-                </tr>
-              </thead>
+          <div style={{ width: "100%" }}>
+            <div className={styles.tableContainer} onScroll={handleScroll}>
+              <table>
+                <thead>
+                  <tr>
+                    <th className={textStyles.labelLarge}>Names</th>
+                    <th className={textStyles.labelLarge}>Date</th>
+                    <th className={textStyles.labelLarge}>Amount</th>
+                    <th className={textStyles.labelLarge}>Reference</th>
+                    <th className={textStyles.labelLarge}>Status</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {Array(100)
-                  .fill(null)
-                  .map((_, i) => {
+                <tbody>
+                  {transactions.map((transaction) => {
                     return (
-                      <tr key={`tr_${i}`}>
+                      <tr key={transaction.id}>
                         <td className={textStyles.bodySmall}>
-                          Menyaga Emmanuel
+                          {transaction.meta.sender.name}
                         </td>
                         <td className={textStyles.bodySmall}>
-                          May, 02 2023, 2:00pm
+                          {moment(transaction.createdAt).format(
+                            "MMMM, DD YYYY, hh:mma"
+                          )}
                         </td>
-                        <td className={textStyles.bodySmall}>₦10,000</td>
-                        <td className={textStyles.bodySmall}>wdfdghtew</td>
-                        <td className={textStyles.bodySmall}>Completed</td>
+                        <td className={textStyles.bodySmall}>
+                          ₦{Util.formatNumber(transaction.amount)}
+                        </td>
+                        <td className={textStyles.bodySmall}>
+                          {transaction.reference}
+                        </td>
+                        <td className={textStyles.bodySmall}>
+                          {transaction.status}
+                        </td>
                       </tr>
                     );
                   })}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
+            {loadingTransactions && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "50px 0px 0px",
+                }}
+              >
+                <ThreeDotLoader />
+              </div>
+            )}
           </div>
         </div>
-
         <div className={styles.printView}>
           <div>
             <Image

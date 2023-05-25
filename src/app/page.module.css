@@ -44,11 +44,14 @@
   top: 0;
   padding: 18px 24px !important;
   line-height: 0 !important;
+  max-height: 53.33px;
+  max-width: 116px;
+  transition: all 0.2s ease-in-out;
 }
 
 .tableContainer {
   width: 100%;
-  max-height: max(calc(100vh - 505px), 200px);
+  max-height: max(calc(100vh - 525px), 200px);
   overflow-y: scroll;
 }
 
@@ -198,8 +201,8 @@
   align-items: center;
 }
 
-.titleBar div {
-  width: 324px;
+.titleBar > div {
+  width: 374px;
 }
 
 .tnxDetails {
@@ -303,7 +306,7 @@
   }
 
   .tableContainer {
-    max-height: max(calc(100vh - 440px), 200px);
+    max-height: max(calc(100vh - 510px), 200px);
     margin-top: 42px;
   }
 }

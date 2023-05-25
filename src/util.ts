@@ -26,4 +26,8 @@ export class Util {
 
     handler({ message, errors });
   };
+
+  static formatNumber(number?: number, precision = 2) {
+    return (+(number || 0).toFixed(precision)).toLocaleString();
+  }
 }

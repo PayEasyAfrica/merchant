@@ -29,7 +29,7 @@ export const SuccessOverlay = (props: { amount: string; name: string }) => {
         setTimeout(() => {
           setOverlayClass(styles.successOverlay);
         }, 200);
-      }, 1500);
+      }, 3000);
     }
   }, [props.amount, props.name]);
 
