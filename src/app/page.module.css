@@ -289,12 +289,6 @@
   border-radius: 30px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .barcode {
-    filter: invert(1);
-  }
-}
-
 @media (min-width: 1024px) {
   .mobileView {
     display: none;
