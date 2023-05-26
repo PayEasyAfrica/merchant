@@ -277,7 +277,6 @@
   top: 50%;
   transform: translate(-50%, -50%);
   background-color: #ffffff;
-  padding: 3vh;
   border-radius: 30px;
   display: flex;
   align-items: center;
@@ -286,7 +285,7 @@
 
 .printView img {
   width: auto;
-  height: 42vh;
+  height: 45vh;
   border-radius: 30px;
 }
 
