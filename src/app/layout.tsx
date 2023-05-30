@@ -34,6 +34,7 @@ export default function RootLayout({
           href="/favicon-16x16.png"
         />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="preload" href="/business_barcode.png" as="image" />
       </head>
       <body className={roboto.className}>{children}</body>
     </html>
